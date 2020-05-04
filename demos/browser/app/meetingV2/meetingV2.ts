@@ -150,6 +150,7 @@ export class DemoMeetingApp implements AudioVideoObserver, DeviceChangeObserver,
       "amazon-chime-sdk-js@" + Versioning.sdkVersion;
     this.initEventListeners();
     this.initParameters();
+    this.getNearestMediaRegion();
     if (this.isRecorder()) {
       new AsyncScheduler().start(async () => {
         this.meeting = new URL(window.location.href).searchParams.get('m');
@@ -435,6 +436,32 @@ export class DemoMeetingApp implements AudioVideoObserver, DeviceChangeObserver,
         // @ts-ignore
         window.location = window.location.pathname;
       });
+    });
+  }
+
+  getNearestMediaRegion(): void {
+    const defaultNearestMediaRegion = "us-east-1";
+    new AsyncScheduler().start(
+    async (): Promise<void> => {
+      this.showProgress('progress-authenticate');
+      try {
+        const nearestMediaRegionResponse = await fetch(
+          `https://nearest-media-region.l.chime.aws`,
+          {
+            method: 'GET',
+          }
+        );
+        const nearestMediaRegionJSON = await nearestMediaRegionResponse.json();
+        const nearestMediaRegion = nearestMediaRegionJSON.region;
+        if(nearestMediaRegion !== null || nearestMediaRegion !== '') {
+          (document.getElementById('inputRegion') as HTMLInputElement).value = nearestMediaRegion;
+        }
+        else {
+          (document.getElementById('inputRegion') as HTMLInputElement).value = defaultNearestMediaRegion;
+        }
+      } catch (error) {
+        (document.getElementById('inputRegion') as HTMLInputElement).value = defaultNearestMediaRegion;
+      }
     });
   }
 
